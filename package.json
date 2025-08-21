@@ -1,0 +1,42 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "clean": "rm -rf .nuxt node_modules && npm install",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix ."
+  },
+  "dependencies": {
+    "@nuxt/content": "^3.5.1",
+    "@nuxt/fonts": "^0.11.4",
+    "@nuxt/icon": "^1.13.0",
+    "@nuxt/image": "^1.10.0",
+    "@nuxt/ui": "^3.1.2",
+    "@nuxtjs/date-fns": "^1.5.0",
+    "axios": "^1.9.0",
+    "better-sqlite3": "^12.2.0",
+    "chart.js": "^4.4.9",
+    "firebase": "^11.8.1",
+    "firebase-tools": "^14.4.0",
+    "maska": "^3.1.1",
+    "nuxt": "^3.17.4",
+    "pinia": "^3.0.2",
+    "pinia-plugin-persistedstate": "^4.3.0",
+    "sweetalert2": "^11.21.2",
+    "swiper": "^11.2.8",
+    "vue-chartjs": "^5.3.2",
+    "zod": "^3.25.20"
+  },
+  "devDependencies": {
+    "@nuxt/eslint": "^1.4.0",
+    "eslint": "^9.27.0",
+    "typescript": "^5.8.3",
+    "vue-html2pdf": "^1.8.0"
+  }
+}
