@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "convite-ale",
+    "site": "pagodinho-da-rose",
     "public": ".output/public",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
   }
