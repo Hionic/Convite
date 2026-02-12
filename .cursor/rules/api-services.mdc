@@ -1,0 +1,165 @@
+---
+description: Padrões de serviços, Firebase e chamadas de API no projeto Convite
+globs: "**/*.{ts,vue,js}"
+alwaysApply: false
+---
+
+# Padrões de Serviços e Firebase
+
+## Firebase Firestore (Banco Principal)
+
+O projeto usa **Firestore** como banco de dados principal. A instância do Firebase é inicializada em `services/firebase.ts`.
+
+```typescript
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { app } from "~~/services/firebase";
+
+const db = getFirestore(app);
+
+// Buscar documentos
+const colecao = collection(db, "nome_colecao");
+const q = query(colecao, orderBy("data", "asc"));
+const snap = await getDocs(q);
+const dados = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+// Adicionar documento
+await addDoc(collection(db, "nome_colecao"), {
+  campo: "valor",
+  data: String(new Date()),
+});
+
+// Atualizar documento
+await updateDoc(doc(db, "nome_colecao", docId), { campo: "novo_valor" });
+
+// Deletar documento
+await deleteDoc(doc(db, "nome_colecao", docId));
+```
+
+## Firebase Auth
+
+```typescript
+import { singIn, signOut, signInWithGoogle, signUpWithEmail, isAuthenticated, getToken, recoveryPassword } from "~~/services/firebase";
+
+// Login com email/senha
+await singIn({ email: "user@email.com", password: "123456" });
+
+// Login com Google
+await signInWithGoogle();
+
+// Registro
+const user = await signUpWithEmail({ email, password });
+
+// Verificar autenticação
+const isAuth = await isAuthenticated();
+
+// Obter token JWT
+const token = await getToken();
+
+// Logout
+await signOut();
+
+// Recuperar senha
+await recoveryPassword("user@email.com");
+```
+
+## Firebase Storage
+
+```typescript
+import { uploadFileToStorage, uploadFilesToStorage, uploadPdfToStorage, deleteFile, downloadFile } from "~~/services/firebase";
+
+// Upload de arquivo
+const url = await uploadFileToStorage({ path: "pasta/arquivo.pdf", file: fileObj });
+
+// Upload de PDF
+const pdfUrl = await uploadPdfToStorage(file, "relatorio", "12345678000199");
+
+// Deletar arquivo
+await deleteFile("12345678000199", "arquivo.pdf");
+
+// Download de pasta
+await downloadFile("12345678000199");
+```
+
+## API Externa (Axios)
+
+Para chamadas a APIs REST externas, usar o cliente Axios configurado:
+
+```typescript
+import api from "~~/services/api";
+
+// GET
+const response = await api.get("/endpoint");
+
+// POST
+const response = await api.post("/endpoint", payload);
+```
+
+O interceptor automático adiciona o token Firebase como `Bearer` no header `Authorization`.
+
+**Base URL** configurada via `runtimeConfig` (variável de ambiente `BASE_URL`).
+
+## Busca de CEP
+
+```typescript
+import { fetchAddressByZipCode } from "~~/services/zipCodeService";
+
+try {
+  const endereco = await fetchAddressByZipCode("77000000");
+  // endereco: { cep, logradouro, complemento, bairro, localidade, uf, ... }
+} catch (error) {
+  swalError("Erro", error.message);
+}
+```
+
+## Tratamento de Erros
+
+### Firebase
+
+```typescript
+import { swalError } from "~~/utils/swalAlerts";
+
+try {
+  await addDoc(colecao, dados);
+} catch (e) {
+  swalError("Erro ao salvar", "Não foi possível salvar os dados. Tente novamente.");
+}
+```
+
+### Erros Firebase traduzidos
+
+O arquivo `utils/firebase.ts` contém tradução de todos os códigos de erro do Firebase Auth para português:
+
+```typescript
+import { firebaseErrorsTranslation } from "~~/utils/firebase";
+
+// Em signUpWithEmail, erros já são traduzidos automaticamente:
+// "auth/email-already-in-use" → "Já existi uma conta com o endereço de email fornecido."
+// "auth/invalid-credential" → "Email e/ou senha incorretos."
+```
+
+### API Externa
+
+```typescript
+try {
+  const response = await api.get("/dados");
+  // tratar response.data
+} catch (error) {
+  swalError("Erro", "Falha ao buscar dados. Tente novamente.");
+}
+```
+
+## Variáveis de Ambiente
+
+Configuradas via `runtimeConfig` no `nuxt.config.ts`:
+
+```typescript
+// Acessar no client-side
+const config = useRuntimeConfig();
+const baseUrl = config.public.baseUrl;
+const isDev = config.public.dev;
+const subventionBaseUrl = config.public.subventionBaseUrl;
+```
+
+Variáveis necessárias no `.env`:
+- `BASE_URL` — URL base da API externa
+- `SUBVENTION_BASE_URL` — URL base da API de subvenção

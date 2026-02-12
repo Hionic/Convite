@@ -1,0 +1,143 @@
+---
+description: Guia de uso dos componentes disponíveis no projeto Convite
+globs: app/components/**/*.vue
+alwaysApply: false
+---
+
+# Guia de Componentes
+
+## Componentes Nuxt UI (Principais)
+
+O projeto usa **Nuxt UI 3.x** que disponibiliza componentes prontos prefixados com `U`:
+
+| Componente | Uso |
+|---|---|
+| `UButton` | Botões com variantes, ícones e loading |
+| `UInput` | Input de texto |
+| `USelect` | Select/dropdown |
+| `UContainer` | Container centralizado responsivo |
+| `UIcon` | Ícones (Heroicons, Lucide, etc.) |
+| `UDropdownMenu` | Menu dropdown com itens |
+| `USlideover` | Painel lateral deslizante |
+| `UModal` | Modal/diálogo |
+| `UApp` | Wrapper raiz da aplicação |
+| `NuxtLayout` | Wrapper de layout |
+| `NuxtPage` | Renderiza a página atual |
+| `NuxtLink` | Link de navegação |
+
+### Exemplos de Uso
+
+```vue
+<!-- Botão -->
+<UButton text="Confirmar" color="primary" size="lg" :loading="loading" />
+<UButton icon="i-heroicons-shopping-cart" variant="ghost" @click="handleClick" />
+
+<!-- Input -->
+<UInput v-model="nome" placeholder="Seu nome" required />
+
+<!-- Select -->
+<USelect v-model="estado" :items="states" placeholder="Selecione" />
+
+<!-- Container -->
+<UContainer>
+  <div class="py-8">Conteúdo centralizado</div>
+</UContainer>
+
+<!-- Ícone -->
+<UIcon name="i-heroicons-user-circle" class="w-5 h-5" />
+<UIcon name="i-lucide-menu" class="w-6 h-6" />
+
+<!-- Dropdown Menu -->
+<UDropdownMenu :items="menuItems" :content="{ align: 'start', side: 'bottom' }">
+  <UButton icon="i-lucide-menu" variant="ghost" />
+  <template #item="{ item }">
+    <button @click="handleItem(item)">
+      <UIcon :name="item.icon" class="w-5 h-5" />
+      <span>{{ item.label }}</span>
+    </button>
+  </template>
+</UDropdownMenu>
+
+<!-- Slideover (painel lateral) -->
+<USlideover v-model:open="isOpen">
+  <template #content>
+    <div class="p-4">Conteúdo do painel</div>
+  </template>
+</USlideover>
+```
+
+## Componentes Customizados do Projeto
+
+### Loading (`app/components/Loading.vue`)
+
+Componente de loading animado com spinner circular:
+
+```vue
+<Loading :loading="true" label="Carregando..." />
+```
+
+**Props:**
+- `loading: Boolean` — Controla visibilidade
+- `label: String` — Texto exibido abaixo do spinner
+
+## Layouts
+
+### Default (`app/layouts/Default.vue`)
+
+Layout padrão com navbar, menu e carrinho. Inclui:
+- Logo com link para `/home`
+- Botão de carrinho (quando não em `/pagamento`)
+- Dropdown menu (Meus pedidos, Minha conta, Sair)
+- Slideover de carrinho (`CarrinhoOrder`)
+- Slot para conteúdo da página
+
+> **Nota:** Este layout é herança do projeto e-commerce. A página de convite usa `layout: false` para ter design próprio.
+
+Para usar o layout padrão, basta criar a página sem `definePageMeta({ layout: false })`.
+
+Para desabilitar:
+```vue
+<script setup>
+definePageMeta({ layout: false });
+</script>
+```
+
+## Criando Novos Componentes
+
+Componentes ficam em `app/components/` e são **auto-importados** pelo Nuxt:
+
+```vue
+<!-- app/components/MeuComponente.vue -->
+<script setup lang="ts">
+interface MeuComponenteProps {
+  titulo: string;
+  descricao?: string;
+}
+
+const props = defineProps<MeuComponenteProps>();
+</script>
+
+<template>
+  <div class="bg-white rounded-2xl p-6 shadow-md">
+    <h3 class="text-lg font-semibold text-gray-800">{{ titulo }}</h3>
+    <p v-if="descricao" class="text-gray-600 text-sm mt-2">{{ descricao }}</p>
+    <slot />
+  </div>
+</template>
+```
+
+Uso (auto-importado, sem necessidade de import):
+```vue
+<MeuComponente titulo="Olá" descricao="Descrição aqui">
+  <p>Conteúdo do slot</p>
+</MeuComponente>
+```
+
+## Convenções de Componentes
+
+- **Nomeação:** PascalCase (ex.: `Loading.vue`, `CardConvite.vue`)
+- **Props:** Usar `defineProps<Interface>()` com TypeScript
+- **Emits:** Usar `defineEmits<{ (e: 'evento', payload: Tipo): void }>()`
+- **Estilização:** Tailwind CSS inline ou `<style scoped>` quando necessário
+- **Auto-import:** Componentes em `app/components/` são auto-importados pelo Nuxt
+- **Composables:** Lógica reutilizável pode ficar em `app/composables/` (auto-importados)

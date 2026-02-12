@@ -1,0 +1,148 @@
+---
+description: Padrões de formulários e validação no projeto Convite
+globs: "**/*.vue"
+alwaysApply: false
+---
+
+# Formulários e Validação
+
+## Formulário Simples (Padrão do Convite)
+
+```vue
+<script setup>
+const nome = ref("");
+const erro = ref("");
+const loading = ref(false);
+
+async function handleSubmit() {
+  erro.value = "";
+
+  // 1. Validar campos obrigatórios
+  const nomeLimpo = nome.value.trim();
+  if (nomeLimpo.length < 2) {
+    erro.value = "Digite um nome válido!";
+    return;
+  }
+
+  // 2. Enviar dados
+  loading.value = true;
+  try {
+    await addDoc(collection(db, "minha_colecao"), {
+      nome: nomeLimpo,
+      data: String(new Date()),
+    });
+    swalSuccess("Sucesso", "Dados salvos com sucesso!");
+    nome.value = "";
+  } catch (e) {
+    erro.value = "Erro ao salvar! Tente novamente.";
+  }
+  loading.value = false;
+}
+</script>
+
+<template>
+  <form @submit.prevent="handleSubmit" class="flex flex-col gap-2">
+    <input
+      v-model="nome"
+      placeholder="Seu nome"
+      class="rounded-lg border border-pink-200 px-4 py-2 text-lg w-full"
+    />
+    <button
+      type="submit"
+      :disabled="loading"
+      class="bg-orange-100 text-orange-600 font-semibold px-6 py-3 rounded-full w-full"
+    >
+      {{ loading ? "Salvando..." : "Salvar" }}
+    </button>
+    <p v-if="erro" class="text-red-600 mt-2">{{ erro }}</p>
+  </form>
+</template>
+```
+
+## Validação com Zod
+
+O projeto tem **Zod** instalado para validação de schemas:
+
+```typescript
+import { z } from "zod";
+
+const rsvpSchema = z.object({
+  nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  email: z.string().email("E-mail inválido").optional(),
+});
+
+// Validar
+const result = rsvpSchema.safeParse({ nome: inputNome });
+if (!result.success) {
+  swalError("Erro", result.error.errors[0].message);
+  return;
+}
+```
+
+## Máscaras de Input (Maska)
+
+O plugin Maska registra a diretiva `v-maska` globalmente:
+
+```vue
+<!-- CPF -->
+<input v-maska="'###.###.###-##'" v-model="cpf" placeholder="000.000.000-00" />
+
+<!-- CNPJ -->
+<input v-maska="'##.###.###/####-##'" v-model="cnpj" />
+
+<!-- Telefone -->
+<input v-maska="'(##) #####-####'" v-model="telefone" />
+
+<!-- CEP -->
+<input v-maska="'#####-###'" v-model="cep" />
+```
+
+## Formulário com Nuxt UI
+
+Preferir componentes do Nuxt UI para formulários:
+
+```vue
+<UInput v-model="nome" placeholder="Seu nome" required />
+<UButton type="submit" :loading="loading" text="Salvar" />
+<USelect v-model="estado" :items="states" placeholder="Selecione o estado" />
+```
+
+## Alertas após Envio
+
+```typescript
+import { swalSuccess, swalError } from "~~/utils/swalAlerts";
+
+// Sucesso
+swalSuccess("Confirmado!", "Sua presença foi registrada.");
+
+// Erro
+swalError("Erro", "Não foi possível confirmar. Tente novamente.");
+
+// Aviso
+swalWarning("Atenção", "Preencha todos os campos obrigatórios.");
+```
+
+## Padrão de Validação
+
+```typescript
+// ✅ CORRETO: validar antes de enviar
+if (!nome.value.trim()) {
+  swalError("Erro", "Por favor, preencha o nome.");
+  return;
+}
+await addDoc(colecao, dados);
+
+// ❌ ERRADO: enviar sem validar
+await addDoc(colecao, { nome: nome.value }); // pode estar vazio!
+```
+
+## Navegação após Salvar
+
+```typescript
+// ✅ CORRETO: Nuxt navigateTo
+navigateTo("/outra-pagina");
+
+// ❌ ERRADO: Vue Router direto ou React Router
+router.push("/outra-pagina");    // evitar
+navigate("/outra-pagina");       // isso é React
+```

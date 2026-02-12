@@ -1,0 +1,173 @@
+---
+description: Padrões de criação de páginas Vue no projeto Convite (Nuxt 3)
+globs: app/pages/**/*.vue
+alwaysApply: false
+---
+
+# Padrões de Páginas
+
+**IMPORTANTE:** O projeto usa **Nuxt 3** com roteamento file-based. Páginas ficam em `app/pages/`.
+
+## Página Simples (Padrão Convite)
+
+```vue
+<script setup>
+definePageMeta({ layout: false }); // desabilita layout padrão se necessário
+// ou omitir para usar o Default layout
+
+const dados = ref([]);
+const loading = ref(false);
+
+onMounted(async () => {
+  await carregarDados();
+});
+
+async function carregarDados() {
+  loading.value = true;
+  // ...buscar dados do Firestore
+  loading.value = false;
+}
+</script>
+
+<template>
+  <div class="p-4">
+    <div class="max-w-2xl mx-auto">
+      <h1 class="text-2xl font-bold text-gray-800">Título</h1>
+      <!-- conteúdo -->
+    </div>
+  </div>
+</template>
+```
+
+## Página com Layout Padrão
+
+O layout `Default.vue` inclui navbar, menu e carrinho (herança e-commerce). Para usá-lo:
+
+```vue
+<script setup>
+// O layout Default é aplicado automaticamente
+// Para desabilitar: definePageMeta({ layout: false });
+</script>
+
+<template>
+  <div>
+    <!-- Conteúdo será renderizado dentro do <slot /> do Default.vue -->
+    <h1>Minha Página</h1>
+  </div>
+</template>
+```
+
+## Página sem Layout (Standalone)
+
+A página de convite usa `layout: false` para ter design totalmente customizado:
+
+```vue
+<script setup>
+definePageMeta({ layout: false });
+</script>
+
+<template>
+  <div class="min-h-screen bg-gradient-to-br from-pink-500 to-orange-400 p-4">
+    <div class="max-w-2xl mx-auto bg-white rounded-3xl shadow-xl p-8">
+      <!-- Design independente do layout -->
+    </div>
+  </div>
+</template>
+```
+
+## Página com Dados do Firestore
+
+```vue
+<script setup>
+import { getFirestore, collection, getDocs, query, orderBy } from "firebase/firestore";
+import { app } from "~~/services/firebase";
+import { swalError } from "~~/utils/swalAlerts";
+
+const db = getFirestore(app);
+const itens = ref([]);
+
+async function buscarItens() {
+  try {
+    const q = query(collection(db, "minha_colecao"), orderBy("data", "asc"));
+    const snap = await getDocs(q);
+    itens.value = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  } catch (e) {
+    swalError("Erro", "Erro ao buscar dados!");
+    itens.value = [];
+  }
+}
+
+onMounted(buscarItens);
+</script>
+```
+
+## Criando Novas Páginas
+
+No Nuxt 3, o roteamento é **automático** baseado nos arquivos em `app/pages/`:
+
+| Arquivo | Rota |
+|---|---|
+| `app/pages/index.vue` | `/` |
+| `app/pages/sobre.vue` | `/sobre` |
+| `app/pages/convite/[id].vue` | `/convite/:id` (parâmetro dinâmico) |
+| `app/pages/adm/index.vue` | `/adm` |
+| `app/pages/adm/dashboard.vue` | `/adm/dashboard` |
+
+**NÃO é necessário** registrar rotas manualmente em nenhum arquivo de configuração.
+
+## Parâmetros Dinâmicos
+
+```vue
+<!-- app/pages/convite/[id].vue -->
+<script setup>
+const route = useRoute();
+const id = route.params.id;
+</script>
+```
+
+## Middleware de Autenticação
+
+O middleware `auth.global.ts` protege automaticamente todas as rotas **exceto** as públicas:
+- `/` (convite)
+- `/cadastro`
+- `/cadastro/informacoesServicos`
+- `/cadastro/addressWorkshop`
+- `/cadastro/userData`
+
+Para adicionar novas rotas públicas, editar `middleware/auth.global.ts`:
+
+```typescript
+const publicPaths = [
+  "/",
+  "/cadastro",
+  "/nova-rota-publica",
+];
+```
+
+## Navegação
+
+```typescript
+// ✅ CORRETO: Nuxt navigateTo
+navigateTo("/sobre");
+navigateTo({ path: "/convite", query: { id: "123" } });
+
+// ✅ Também válido: NuxtLink no template
+<NuxtLink to="/sobre">Sobre</NuxtLink>
+
+// ❌ ERRADO: React Router (NÃO é React)
+navigate("/sobre");
+useNavigate();
+
+// ❌ ERRADO: Next.js (NÃO é Next.js)
+router.push("/sobre");
+```
+
+## Checklist de Nova Página
+
+- [ ] Criar arquivo em `app/pages/` (rota gerada automaticamente)
+- [ ] Definir `definePageMeta` se necessário (layout, middleware)
+- [ ] Se rota pública, adicionar ao array em `middleware/auth.global.ts`
+- [ ] Usar componentes Nuxt UI + Tailwind para UI
+- [ ] Tipar dados com TypeScript
+- [ ] Tratar erros com `swalError`
+- [ ] Mensagens em português brasileiro
