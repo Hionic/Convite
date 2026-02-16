@@ -47,6 +47,16 @@ async function confirmarPresenca() {
     return;
   }
 
+  const jaConfirmado = confirmados.value.some(
+    (c) => c.nome?.toLowerCase() === nomeLimpo.toLowerCase(),
+  );
+
+  if (jaConfirmado) {
+    erro.value = "Este nome já foi confirmado!";
+    loading.value = false;
+    return;
+  }
+
   try {
     await addDoc(confirmadosCol, {
       nome: nomeLimpo,
@@ -154,7 +164,7 @@ async function confirmarPresenca() {
             </h3>
             <p class="text-gray-700">
               Peço por gentileza confirmar presença até
-              <strong>13/02/2026</strong>
+              <strong>20/02/2026</strong>
             </p>
 
             <form
@@ -169,8 +179,12 @@ async function confirmarPresenca() {
 
               <button
                 type="submit"
-                :disabled="loading"
                 class="bg-orange-100 text-orange-600 font-semibold px-6 py-3 rounded-full w-full"
+                :class="{
+                  'cursor-not-allowed opacity-40':
+                    loading || new Date() >= new Date('2026-02-20'),
+                }"
+                :disabled="loading || new Date() >= new Date('2026-02-20')"
               >
                 {{ loading ? "Confirmando..." : "Confirmar Presença" }}
               </button>
