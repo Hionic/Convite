@@ -22,3 +22,4 @@ Pronto! Você recebe a confirmação em tempo real e pode acompanhar quem estar�
 Faça do seu aniversário um evento inesquecível, do digital ao real!
 
 Se você quiser, posso criar uma versão ainda mais curta e chamativa, perfeita para a primeira tela do site, com toque moderno e divertido. Quer que eu faça?
+# playlist
